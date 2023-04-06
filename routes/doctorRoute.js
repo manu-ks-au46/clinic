@@ -23,8 +23,8 @@ doctorRouter.post("/", addPatient);
 doctorRouter.put("/:mobileNumber", updatePatient);
 doctorRouter.delete("/:mobileNumber", deletePatient);
 //add,update,delete patient prescription
-doctorRouter.post("/", postPrescription);
+doctorRouter.post("/Prescription", postPrescription);
 doctorRouter.put("/:mobileNumber", updatePrescription);
-doctorRouter.delete("/", deletePrescription);
+doctorRouter.delete("/:mobileNumber", deletePrescription);
 
 module.exports = doctorRouter;

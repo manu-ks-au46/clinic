@@ -30,12 +30,10 @@ const getPatientsByPhone = async (req, res) => {
 const addPatient = async (req, res) => {
   const patientData = req.body;
   try {
-    const existingUser = await PatientModel.findOne({
-      mobileNumber: mobileNumber,
-    });
+    const existingUser = await PatientModel.findOne({patientId:patientData.patientId});
     if (existingUser) {
       res.status(400).send({ status: "error", msg: "user already exist" });
-      return;
+    return
     }
     const data = await PatientModel.create(patientData);
     res.status(201).send({
@@ -51,6 +49,7 @@ const addPatient = async (req, res) => {
     });
   }
 };
+
 
 const updatePatient = async (req, res) => {
   const { mobileNumber } = req.params;

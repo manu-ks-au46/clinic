@@ -25,17 +25,14 @@ const patientSchema = new Schema({
   },
   mobileNumber: {
     type: Number,
-    max: 10,
     required: true,
   },
   age: {
     type: Number,
     max: 120,
-    required: true,
   },
   gender: {
     type: String,
-    unique: true,
   },
 },{timestamps:true});
 
