@@ -28,9 +28,13 @@ const consultationSchema = new Schema(
     attachment: {
       type: String,
     },
+    description: {
+      type: String,
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "doctors",
+      ref: "clinic",
     },
   },
   {

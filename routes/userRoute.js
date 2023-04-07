@@ -4,8 +4,8 @@ const {logIn,signUp,logOut} = require('../controllers/userController')
 
 const userRouter = new Router()
 
-userRouter.get('/login',logIn)
-userRouter.get('/signup',signUp)
-userRouter.get('/logout',logOut)
+userRouter.post('/login',logIn)
+userRouter.post('/signup',signUp)
+userRouter.post('/logout',logOut)
 
 module.exports = userRouter

@@ -1,22 +1,18 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const PracticeModel = require("../models/practiceModel");
+const ClinicModel = require("../models/clinicModel");
 
 const signUp = async (req, res) => {
-  const { patientName, email, mobileNumber, password } = req.body;
+  const userData = req.body;
+  const {password}=req.body
   try {
-    loggedInUser = await PracticeModel.findOne({ email: email });
+    loggedInUser = await ClinicModel.findOne({ email: userData.email });
     if (loggedInUser) {
       res.status(400).send({ status: "error", msg: "user already exist" });
       return;
     }
     const protectedPassword = await bcrypt.hash(password, 10);
-    const newUser = await PracticeModel.create({
-      email,
-      patientName,
-      password: protectedPassword,
-      mobileNumber,
-    });
+    const newUser = await ClinicModel.create({ ...userData, password: protectedPassword });
     res.status(200).send({
       status: "success",
       msg: "user registred succesfully",
@@ -27,6 +23,7 @@ const signUp = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .send({ status: "error", msg: "internal server error", error });
@@ -36,18 +33,18 @@ const signUp = async (req, res) => {
 const logIn = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const loggedInUser = await PracticeModel.findOne({ email: email });
+    const loggedInUser = await ClinicModel.findOne({ email: email },{email:1,password:1,isDoctor:1});
     if (!loggedInUser) {
       res.status(400).send({ status: "error", msg: "User not found" });
       return;
     } else {
-      isPasswordMatch = await bcrypt.compare(password, loggedInUser.password);
-      if (!password) {
+      isPasswordMatch = await bcrypt.compare(password, loggedInUser.password); 
+      if (!isPasswordMatch) {
         res.status(400).send({ status: "error", msg: "Password Incorrect" });
         return;
       }
     }
-    const userPayload = { email, isAdmin: loggedInUser.isAdmin };
+    const userPayload = { email, isDoctor: loggedInUser.isDoctor};
     //Generate the token
     const token = jwt.sign(userPayload, process.env.SECRET_KEY, {
       algorithm: "HS384",
@@ -68,7 +65,7 @@ const logOut = async (req, res) => {
 };
 
 module.exports = {
-  signUp,
   logIn,
   logOut,
+  signUp
 };

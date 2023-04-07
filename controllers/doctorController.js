@@ -32,7 +32,7 @@ const addPatient = async (req, res) => {
   try {
     const existingUser = await PatientModel.findOne({patientId:patientData.patientId});
     if (existingUser) {
-      res.status(400).send({ status: "error", msg: "user already exist" });
+      res.status(400).send({ status: "error", msg: "user already exist with this ID" });
     return
     }
     const data = await PatientModel.create(patientData);
