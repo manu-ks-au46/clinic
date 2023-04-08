@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const ClinicModel = require("../models/clinicModel");
-
+const SECRET_KEY = process.env.SECRET_KEY
 const signUp = async (req, res) => {
   const userData = req.body;
   const {password}=req.body
@@ -23,7 +23,6 @@ const signUp = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
     res
       .status(500)
       .send({ status: "error", msg: "internal server error", error });
@@ -44,7 +43,8 @@ const logIn = async (req, res) => {
         return;
       }
     }
-    const userPayload = { email, isDoctor: loggedInUser.isDoctor};
+    const userPayload = { email, isDoctor: loggedInUser.isDoctor,id: loggedInUser._id};
+    
     //Generate the token
     const token = jwt.sign(userPayload, process.env.SECRET_KEY, {
       algorithm: "HS384",
@@ -67,5 +67,6 @@ const logOut = async (req, res) => {
 module.exports = {
   logIn,
   logOut,
-  signUp
+  signUp,
+  SECRET_KEY
 };

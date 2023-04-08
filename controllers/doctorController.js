@@ -1,11 +1,14 @@
 const PatientModel = require("../models/patientModel");
 const ConsultationModel = require("../models/consultationModel");
 
+
+
 //patients
 
 const getAllPatients = async (req, res) => {
   try {
-    const patients = await PatientModel.find(); //pagination pending
+    const patients = await PatientModel.find().populate("createdBy", "clinicName location")
+    .exec();
     res.status(200).send({ status: "success", patients });
   } catch (error) {
     res.status(404).send({ status: "error", error });
@@ -16,7 +19,8 @@ const getPatientsByPhone = async (req, res) => {
   const { mobileNumber } = req.params;
 
   try {
-    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber });
+    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber }).populate("createdBy", "clinicName location")
+    .exec();;
     if (patient) {
       res.status(200).send({ status: "success", patient });
     } else {
@@ -35,13 +39,16 @@ const addPatient = async (req, res) => {
       res.status(400).send({ status: "error", msg: "user already exist with this ID" });
     return
     }
-    const data = await PatientModel.create(patientData);
+    const clinicID = req.userPayload.id
+    console.log(clinicID);
+    const data = await PatientModel.create({...patientData,createdBy:clinicID});
     res.status(201).send({
       status: "success",
       msg: "patient added successfully to Database",
       patient: data,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).send({
       status: "error",
       msg: "error adding patient to Database",
@@ -49,8 +56,6 @@ const addPatient = async (req, res) => {
     });
   }
 };
-
-
 const updatePatient = async (req, res) => {
   const { mobileNumber } = req.params;
   const updatedPatientData = req.body;

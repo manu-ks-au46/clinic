@@ -34,7 +34,11 @@ const patientSchema = new Schema({
   gender: {
     type: String,
   },
+  createdBy:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "clinic",
+    
+  }
 },{timestamps:true});
-
 const PatientModel = mongoose.model("patients", patientSchema);
 module.exports = PatientModel;

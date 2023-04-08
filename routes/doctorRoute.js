@@ -10,12 +10,12 @@ const {
   updatePrescription,
   deletePrescription
 } = require("../controllers/doctorController");
-// const {verifyToken,isDoctor} = require('../middlewares/usermiddleware')
-// doctorRouter.use(verifyToken)
-
+const {verifyToken,isDoctor} = require('../middlewares/usermiddleware')
 
 const doctorRouter = new Router();
 //get patients
+doctorRouter.use(verifyToken)
+doctorRouter.use(isDoctor)
 doctorRouter.get("/",getAllPatients);
 doctorRouter.get("/:mobileNumber", getPatientsByPhone);
 //get patient prescription
