@@ -1,14 +1,14 @@
 const PatientModel = require("../models/patientModel");
 const ConsultationModel = require("../models/consultationModel");
-
-
+const DoctorModel = require("../models/doctormodel");
 
 //patients
 
 const getAllPatients = async (req, res) => {
   try {
-    const patients = await PatientModel.find().populate("createdBy", "clinicName location")
-    .exec();
+    const patients = await PatientModel.find()
+      .populate("createdBy", "clinic")
+      .exec();
     res.status(200).send({ status: "success", patients });
   } catch (error) {
     res.status(404).send({ status: "error", error });
@@ -19,8 +19,25 @@ const getPatientsByPhone = async (req, res) => {
   const { mobileNumber } = req.params;
 
   try {
-    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber }).populate("createdBy", "clinicName location")
-    .exec();;
+    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber })
+      .populate("createdBy", "clinicName")
+      .exec();
+    if (patient) {
+      res.status(200).send({ status: "success", patient });
+    } else {
+      res.status(404).send({ status: "error", msg: "patient not found" });
+    }
+  } catch (error) {
+    res.status(404).send({ status: "error", patient, error });
+  }
+};
+const getPatientsByClinic = async (req, res) => {
+  const { mobileNumber } = req.params;
+
+  try {
+    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber })
+      .populate("createdBy", "clinicName location", "ddoctorName")
+      .exec();
     if (patient) {
       res.status(200).send({ status: "success", patient });
     } else {
@@ -31,17 +48,60 @@ const getPatientsByPhone = async (req, res) => {
   }
 };
 
+// const addPatient = async (req, res) => {
+//   const patientData = req.body;
+//   try {
+//     const existingUser = await PatientModel.findOne({patientId:patientData.patientId});
+//     if (existingUser) {
+//       res.status(400).send({ status: "error", msg: "user already exist with this ID" });
+//     return
+//     }
+//     const clinicID = req.userPayload.id
+//     const doctorID = req.userPayload.doctorId;
+//     const data = await PatientModel.create({...patientData,createdBy:doctorID,clinicID:clinicID});
+//     res.status(201).send({
+//       status: "success",
+//       msg: "patient added successfully to Database",
+//       patient: data,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: "error",
+//       msg: "error adding patient to Database",
+//       error,
+//     });
+//   }
+// };
 const addPatient = async (req, res) => {
   const patientData = req.body;
   try {
-    const existingUser = await PatientModel.findOne({patientId:patientData.patientId});
+    const existingUser = await PatientModel.findOne({
+      patientId: patientData.patientId,
+    });
     if (existingUser) {
-      res.status(400).send({ status: "error", msg: "user already exist with this ID" });
-    return
+      res
+        .status(400)
+        .send({ status: "error", msg: "user already exist with this ID" });
+      return;
     }
-    const clinicID = req.userPayload.id
-    console.log(clinicID);
-    const data = await PatientModel.create({...patientData,createdBy:clinicID});
+    const doctorID = req.userPayload.id;
+    const doctorName = req.userPayload.doctorName;
+    const clinicID = req.userPayload.clinic
+
+    console.log(req.userPayload);
+    // console.log(doctorName);
+    const data = await PatientModel.create({
+      ...patientData,
+      createdBy: doctorID,
+      doctorname: doctorName,
+      clinic:clinicID//add proper clinic with respect to doctor
+    });
+    const updatedDoctor = await DoctorModel.findByIdAndUpdate(doctorID, {
+      $push: {
+        patients: data._id,
+      },
+    });
     res.status(201).send({
       status: "success",
       msg: "patient added successfully to Database",
@@ -56,6 +116,7 @@ const addPatient = async (req, res) => {
     });
   }
 };
+
 const updatePatient = async (req, res) => {
   const { mobileNumber } = req.params;
   const updatedPatientData = req.body;
@@ -94,24 +155,26 @@ const deletePatient = async (req, res) => {
   }
 };
 //consultation
-const getPrescription = async(req, res) => {
-  const {mobileNumber} =req.params
+const getPrescription = async (req, res) => {
+  const { mobileNumber } = req.params;
   try {
-    const prescription = await ConsultationModel.findOne({ mobileNumber: mobileNumber });
+    const prescription = await ConsultationModel.findOne({
+      mobileNumber: mobileNumber,
+    });
     if (prescription) {
       res.status(200).send({ status: "success", prescription });
     } else {
-      res.status(404).send({ status: "error", msg: "prescription not found"});
+      res.status(404).send({ status: "error", msg: "prescription not found" });
     }
   } catch (error) {
     res.status(404).send({ status: "error", prescription, error });
   }
 };
 
-const postPrescription = async(req, res) => {
-  const prescriptionData = req.body
+const postPrescription = async (req, res) => {
+  const prescriptionData = req.body;
   try {
-    const prescriptionAdd = await ConsultationModel.create(prescriptionData)
+    const prescriptionAdd = await ConsultationModel.create(prescriptionData);
     res.status(201).send({
       status: "success",
       msg: "prescription added successfully to Database",
@@ -126,7 +189,7 @@ const postPrescription = async(req, res) => {
   }
 };
 
-const updatePrescription = async(req, res) => {
+const updatePrescription = async (req, res) => {
   const { mobileNumber } = req.params;
   const updatedConsultationData = req.body;
   try {
@@ -146,10 +209,12 @@ const updatePrescription = async(req, res) => {
   }
 };
 
-const deletePrescription = async(req, res) => {
+const deletePrescription = async (req, res) => {
   const { mobileNumber } = req.params;
   try {
-    const deletedPrescription = await ConsultationModel.findOneAndDelete(mobileNumber);
+    const deletedPrescription = await ConsultationModel.findOneAndDelete(
+      mobileNumber
+    );
     res.status(201).send({
       status: "success",
       msg: "prescription deleted successfully",
@@ -167,11 +232,12 @@ const deletePrescription = async(req, res) => {
 module.exports = {
   getAllPatients,
   getPatientsByPhone,
+  getPatientsByClinic,
   addPatient,
   updatePatient,
   deletePatient,
   getPrescription,
   postPrescription,
   updatePrescription,
-  deletePrescription
+  deletePrescription,
 };

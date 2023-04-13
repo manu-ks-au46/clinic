@@ -2,19 +2,6 @@ const mongoose = require("mongoose");
 const { Schema } = require("mongoose");
 
 const clinicSchema = new Schema({
-  doctorName: {
-    type: String,
-    minLength: 1,
-    maxLength: 25,
-    required: true,
-  },
-  doctorId: {
-    type: String,
-    minLength: 1,
-    maxLength: 25,
-    required: true,
-    unique: true,
-  },
   clinicName: {
     type: String,
     minLength: 1,
@@ -29,14 +16,30 @@ const clinicSchema = new Schema({
   },
   email: {
     type: String,
-    unique: true,
-  },
-  password: {
-    type: String,
+
   },
   mobileNumber: {
     type: Number,
     required: true,
+  },
+  password: {
+    type: String,
+  },
+  doctors: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Doctors'
+    }
+  ],
+  patients: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'patients'
+    }
+  ],
+  isClinic:{
+    type:Boolean,
+    default:false
   },
   location: {
     type: String,
@@ -44,12 +47,12 @@ const clinicSchema = new Schema({
     maxLength: 25,
     required: true,
   },
-  isDoctor:{
-    type:Boolean,
-    default:false
-  }
+  pinCode: {
+    type: Number,
+    required: true,
+  },
 
 },{timestamps:true});
 
-const ClinicModel = mongoose.model("clinic", clinicSchema);
+const ClinicModel = mongoose.model("clinics", clinicSchema);
 module.exports = ClinicModel;

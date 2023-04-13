@@ -14,12 +14,7 @@ const patientSchema = new Schema({
     maxLength: 25,
     required: true,
   },
-  address: {
-    type: String,
-    minLength: 1,
-    maxLength: 100,
-    required: true,
-  },
+
   email: {
     type: String,
   },
@@ -34,10 +29,26 @@ const patientSchema = new Schema({
   gender: {
     type: String,
   },
+  address: {
+    type: String,
+    minLength: 1,
+    maxLength: 100,
+    required: true,
+  },
+  pinCode: {
+    type: Number,
+    max: 120,
+  },
   createdBy:{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "clinic",
-    
+    ref: "doctors",  
+  },
+  doctorname:{
+    type:String
+  },
+  clinic:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "clinics",  
   }
 },{timestamps:true});
 const PatientModel = mongoose.model("patients", patientSchema);

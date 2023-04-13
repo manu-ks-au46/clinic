@@ -3,8 +3,9 @@ const dotenv = require("dotenv")
 const cookieParser = require("cookie-parser")
 const cors = require('cors')
 
-const userRouter = require('./routes/userRoute')
-const doctorRouter = require('./routes/doctorRoute')
+const userRouter = require('./routes/userRouter')
+const doctorRouter = require('./routes/consultationRouter')
+const superAdminRouter = require('./routes/superAdminRouter')
 const connectDB = require('./dbConfig')
 
 dotenv.config()
@@ -17,8 +18,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())//cookie
 
 //routes
+app.use('/superadmin',superAdminRouter)
 app.use('/doctors',userRouter)
-app.use('/api/patients',doctorRouter)
+app.use('/patients',doctorRouter)
 
 
 PORT = process.env.PORT || 5000;

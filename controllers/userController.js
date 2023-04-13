@@ -1,23 +1,27 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const DoctorModel = require("../models/doctormodel");
 const ClinicModel = require("../models/clinicModel");
-const SECRET_KEY = process.env.SECRET_KEY
+const SECRET_KEY = process.env.SECRET_KEY;
 const signUp = async (req, res) => {
   const userData = req.body;
-  const {password}=req.body
+  const { password } = req.body;
   try {
-    loggedInUser = await ClinicModel.findOne({ email: userData.email });
+    loggedInUser = await DoctorModel.findOne({ email: userData.email });
     if (loggedInUser) {
       res.status(400).send({ status: "error", msg: "user already exist" });
       return;
     }
     const protectedPassword = await bcrypt.hash(password, 10);
-    const newUser = await ClinicModel.create({ ...userData, password: protectedPassword });
+    const newUser = await DoctorModel.create({
+      ...userData,
+      password: protectedPassword,
+    });
     res.status(200).send({
       status: "success",
       msg: "user registred succesfully",
       user: {
-        patientName: newUser.patientName,
+        doctorName: newUser.doctorName,
         email: newUser.email,
         mobileNumber: newUser.mobileNumber,
       },
@@ -31,20 +35,35 @@ const signUp = async (req, res) => {
 
 const logIn = async (req, res) => {
   const { email, password } = req.body;
+
   try {
-    const loggedInUser = await ClinicModel.findOne({ email: email },{email:1,password:1,isDoctor:1});
+    const loggedInUser = await DoctorModel.findOne(
+      { email },
+      { email: 1, password: 1, isDoctor: 1, doctorName: 1, clinic: 1 }
+    );
     if (!loggedInUser) {
-      res.status(400).send({ status: "error", msg: "User not found" });
+      res.status(404).send({ status: "error", msg: "User not found" });
       return;
     } else {
-      isPasswordMatch = await bcrypt.compare(password, loggedInUser.password); 
+      const isPasswordMatch = await bcrypt.compare(
+        password,
+        loggedInUser.password
+      );
       if (!isPasswordMatch) {
         res.status(400).send({ status: "error", msg: "Password Incorrect" });
         return;
       }
     }
-    const userPayload = { email, isDoctor: loggedInUser.isDoctor,id: loggedInUser._id};
-    
+
+    // const userPayload = { email, isDoctor: loggedInUser.isDoctor,id: loggedInUser._id,doctorName: loggedInUser.doctorName};
+    const userPayload = {
+      email,
+      isDoctor: loggedInUser.isDoctor,
+      id: loggedInUser._id,
+      doctorName: loggedInUser.doctorName,
+      clinic: loggedInUser.clinic
+    };
+
     //Generate the token
     const token = jwt.sign(userPayload, process.env.SECRET_KEY, {
       algorithm: "HS384",
@@ -68,5 +87,5 @@ module.exports = {
   logIn,
   logOut,
   signUp,
-  SECRET_KEY
+  SECRET_KEY,
 };

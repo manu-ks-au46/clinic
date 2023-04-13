@@ -16,12 +16,12 @@ const doctorRouter = new Router();
 //get patients
 doctorRouter.use(verifyToken)
 doctorRouter.use(isDoctor)
-doctorRouter.get("/",getAllPatients);
+doctorRouter.get("/viewpatients",getAllPatients);
 doctorRouter.get("/:mobileNumber", getPatientsByPhone);
 //get patient prescription
 doctorRouter.get("/:mobileNumber", getPrescription);
 //add,update,delete patients
-doctorRouter.post("/", addPatient);
+doctorRouter.post("/addpatient", addPatient);
 doctorRouter.put("/:mobileNumber", updatePatient);
 doctorRouter.delete("/:mobileNumber", deletePatient);
 //add,update,delete patient prescription
