@@ -1,6 +1,11 @@
 const PatientModel = require("../models/patientModel");
 const ConsultationModel = require("../models/consultationModel");
 const DoctorModel = require("../models/doctormodel");
+const twilio = require('twilio');
+const ClinicModel = require("../models/clinicModel");
+const accountSid = 'AC9778e26a084699b0dee0499d3186a2d3';
+const authToken = '09b4699624cadb4325512518b5ac66a6';
+const client = twilio(accountSid, authToken);
 
 //patients
 
@@ -88,15 +93,32 @@ const addPatient = async (req, res) => {
     const doctorID = req.userPayload.id;
     const doctorName = req.userPayload.doctorName;
     const clinicID = req.userPayload.clinic
+    const addedClinic = await ClinicModel.findById(clinicID)
+    const clinicName =addedClinic.clinicName
+    console.log(clinicName);
 
-    console.log(req.userPayload);
-    // console.log(doctorName);
+    // console.log(req.userPayload);
+    
     const data = await PatientModel.create({
       ...patientData,
       createdBy: doctorID,
       doctorname: doctorName,
-      clinic:clinicID//add proper clinic with respect to doctor
+      clinicName:clinicName,
+      clinic:clinicID
     });
+
+    const patientPhoneNumber = patientData.mobileNumber;
+    console.log(patientPhoneNumber);
+    const message = `Hello ${patientData.patientName}, your patient record has been created by Dr. ${doctorName} at ${clinicID}.`;
+
+    client.messages
+      .create({
+        body: message,
+        from: 'whatsapp:+14155238886', // Twilio sandbox WhatsApp number
+        to: `whatsapp:${patientPhoneNumber}`,
+      })
+      .then((message) => console.log(message.sid));
+
     const updatedDoctor = await DoctorModel.findByIdAndUpdate(doctorID, {
       $push: {
         patients: data._id,

@@ -49,6 +49,10 @@ const patientSchema = new Schema({
   clinic:{
     type: mongoose.Schema.Types.ObjectId,
     ref: "clinics",  
+  },
+  clinicName:{
+    type:String
+
   }
 },{timestamps:true});
 const PatientModel = mongoose.model("patients", patientSchema);
