@@ -36,6 +36,16 @@ const consultationSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "clinic",
     },
+    createdByDoctor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "doctors",
+    },
+    doctorName: {
+      type: String,
+    },
+    clinicName: {
+      type: String,
+    },
   },
   {
     timestamps: true,

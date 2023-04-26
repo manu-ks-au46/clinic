@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser")
 const cors = require('cors')
 
 const userRouter = require('./routes/userRouter')
-const doctorRouter = require('./routes/consultationRouter')
+const doctorRouter = require('./routes/doctorRouter')
 const superAdminRouter = require('./routes/superAdminRouter')
 const connectDB = require('./dbConfig')
 

@@ -53,7 +53,13 @@ const patientSchema = new Schema({
   clinicName:{
     type:String
 
-  }
+  },
+  consultation: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'consultation'
+    }
+  ],
 },{timestamps:true});
 const PatientModel = mongoose.model("patients", patientSchema);
 module.exports = PatientModel;

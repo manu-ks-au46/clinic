@@ -20,7 +20,7 @@ const verifyToken = (req, res, next) => {
 }
 
   const isDoctor = (req, res, next) => {
-    //if Admin, next()
+    //if doctor, next()
     //else not authorized to perform this operation
     const userPayload = req.userPayload
   
@@ -31,11 +31,25 @@ const verifyToken = (req, res, next) => {
     }
   
   }
+
+  const isClinic = (req, res, next) => {
+    //if doctor, next()
+    //else not authorized to perform this operation
+    const userPayload = req.userPayload
+  
+    if (userPayload.isClinic) {
+      next()
+    } else {
+      res.status(401).send({ status: 'error', msg: 'Not authorized to perform this operation' })
+    }
+  
+  }
  
 
   module.exports = {
     verifyToken,
-    isDoctor
+    isDoctor,
+    isClinic
    
   }
 

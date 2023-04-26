@@ -1,11 +1,11 @@
 const PatientModel = require("../models/patientModel");
 const ConsultationModel = require("../models/consultationModel");
 const DoctorModel = require("../models/doctormodel");
-const twilio = require('twilio');
+// const twilio = require('twilio');
 const ClinicModel = require("../models/clinicModel");
-const accountSid = 'AC9778e26a084699b0dee0499d3186a2d3';
-const authToken = '09b4699624cadb4325512518b5ac66a6';
-const client = twilio(accountSid, authToken);
+// const accountSid = 'AC9778e26a084699b0dee0499d3186a2d3';
+// const authToken = '09b4699624cadb4325512518b5ac66a6';
+// const client = twilio(accountSid, authToken);
 
 //patients
 
@@ -53,31 +53,7 @@ const getPatientsByClinic = async (req, res) => {
   }
 };
 
-// const addPatient = async (req, res) => {
-//   const patientData = req.body;
-//   try {
-//     const existingUser = await PatientModel.findOne({patientId:patientData.patientId});
-//     if (existingUser) {
-//       res.status(400).send({ status: "error", msg: "user already exist with this ID" });
-//     return
-//     }
-//     const clinicID = req.userPayload.id
-//     const doctorID = req.userPayload.doctorId;
-//     const data = await PatientModel.create({...patientData,createdBy:doctorID,clinicID:clinicID});
-//     res.status(201).send({
-//       status: "success",
-//       msg: "patient added successfully to Database",
-//       patient: data,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       status: "error",
-//       msg: "error adding patient to Database",
-//       error,
-//     });
-//   }
-// };
+
 const addPatient = async (req, res) => {
   const patientData = req.body;
   try {
@@ -107,21 +83,26 @@ const addPatient = async (req, res) => {
       clinic:clinicID
     });
 
-    const patientPhoneNumber = patientData.mobileNumber;
-    console.log(patientPhoneNumber);
-    const message = `Hello ${patientData.patientName}, your patient record has been created by Dr. ${doctorName} at ${clinicID}.`;
+    // const patientPhoneNumber = patientData.mobileNumber;
+    // console.log(patientPhoneNumber);
+    // const message = `Hello ${patientData.patientName}, your patient record has been created by Dr. ${doctorName} at ${clinicID}.`;
 
-    client.messages
-      .create({
-        body: message,
-        from: 'whatsapp:+14155238886', // Twilio sandbox WhatsApp number
-        to: `whatsapp:${patientPhoneNumber}`,
-      })
-      .then((message) => console.log(message.sid));
+    // client.messages
+    //   .create({
+    //     body: message,
+    //     from: 'whatsapp:+14155238886', // Twilio sandbox WhatsApp number
+    //     to: `whatsapp:${patientPhoneNumber}`,
+    //   })
+    //   .then((message) => console.log(message.sid));
 
     const updatedDoctor = await DoctorModel.findByIdAndUpdate(doctorID, {
       $push: {
         patients: data._id,
+      },
+    });
+    const updatedClinic = await ClinicModel.findByIdAndUpdate(clinicID,{
+      $push:{
+        patients:data._id
       },
     });
     res.status(201).send({
@@ -140,116 +121,241 @@ const addPatient = async (req, res) => {
 };
 
 const updatePatient = async (req, res) => {
-  const { mobileNumber } = req.params;
-  const updatedPatientData = req.body;
+  const patientId = req.params.id;
+  const patientData = req.body;
   try {
-    const updatedPatient = await PatientModel.findOneAndUpdate(
-      mobileNumber,
-      updatedPatientData
-    );
-    res.status(201).send({
+    const updatedPatient = await PatientModel.findByIdAndUpdate(patientId, patientData, {
+      new: true, // Return the updated document
+    });
+
+    // Update the patient in the doctor schema
+    const updatedDoctor = await DoctorModel.findOneAndUpdate({
+      patients: patientId,
+    }, {
+      $set: {
+        'patients.$': updatedPatient,
+      },
+    });
+
+    // Update the patient in the clinic schema
+    const updatedClinic = await ClinicModel.findOneAndUpdate({
+      patients: patientId,
+    }, {
+      $set: {
+        'patients.$': updatedPatient,
+      },
+    });
+
+    res.status(200).send({
       status: "success",
       msg: "patient updated successfully",
       patient: updatedPatient,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({ status: "error", msg: "error updating patient", error });
+    console.log(error);
+    res.status(500).send({
+      status: "error",
+      msg: "error updating patient",
+      error,
+    });
   }
 };
+//delete 
 
 const deletePatient = async (req, res) => {
-  const { mobileNumber } = req.params;
+  const patientId = req.params.id;
+  console.log(req.params);
+  console.log(patientId);
   try {
-    const deletedPatient = await PatientModel.findOneAndDelete(mobileNumber);
-    res.status(201).send({
+    const patient = await PatientModel.findById(patientId);
+    if (!patient) {
+      res.status(404).send({
+        status: "error",
+        msg: "patient not found",
+      });
+      return;
+    }
+    const doctor = await DoctorModel.findById(patient.createdBy);
+    if (!doctor) {
+      res.status(404).send({
+        status: "error",
+        msg: "doctor not found",
+      });
+      return;
+    }
+    const clinic = await ClinicModel.findById(patient.clinic);
+    if (!clinic) {
+      res.status(404).send({
+        status: "error",
+        msg: "clinic not found",
+      });
+      return;
+    }
+    await doctor.updateOne({
+      $pull: {
+        patients: patientId,
+      },
+    });
+    await clinic.updateOne({
+      $pull: {
+        patients: patientId,
+      },
+    });
+    await PatientModel.findByIdAndDelete(patientId);
+    res.status(200).send({
       status: "success",
       msg: "patient deleted successfully",
-      patient: deletedPatient,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).send({
       status: "error",
-      msg: "error deleting patient from database",
+      msg: "error deleting patient",
       error,
     });
   }
 };
+
 //consultation
-const getPrescription = async (req, res) => {
-  const { mobileNumber } = req.params;
+const getConsultation = async (req, res) => {
+  const { consultationId } = req.params;
+
   try {
-    const prescription = await ConsultationModel.findOne({
-      mobileNumber: mobileNumber,
+    const getConsultation = await ConsultationModel.findById(consultationId)
+      .populate("createdBy", "name _id")
+      .populate("createdByDoctor", "name _id");
+
+    res.status(200).json({
+      status: "success",
+      msg: "consultation retrieved successfully",
+      consultation,
     });
-    if (prescription) {
-      res.status(200).send({ status: "success", prescription });
-    } else {
-      res.status(404).send({ status: "error", msg: "prescription not found" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      msg: "error retrieving consultation",
+      error,
+    });
+  }
+};
+
+
+const addConsultation = async (req, res) => {
+  const { patientId, disease, numberOfVisit, nextConsultationDate, attachment, description } = req.body;
+
+  try {
+    const consultation = await ConsultationModel.create({
+      patientId,
+      mobileNumber: req.body.mobileNumber,
+      disease,
+      numberOfVisit,
+      nextConsultationDate,
+      attachment,
+      description,
+      createdBy: req.userPayload.clinic,
+      createdByDoctor: req.userPayload.doctor,
+      doctorName: req.userPayload.doctorName,
+      clinicName: req.userPayload.clinicName,
+    });
+
+    const patient = await PatientModel.findByIdAndUpdate(patientId, {
+      $push: {
+        consultation: consultation._id,
+      },
+    });
+
+    res.status(201).json({
+      status: "success",
+      msg: "consultation added successfully to patient",
+      consultation,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      msg: "error adding consultation to patient",
+      error,
+    });
+  }
+};
+
+
+const updateConsultation = async (req, res) => {
+  const { consultationId, disease, numberOfVisit, nextConsultationDate, attachment, description } = req.body;
+
+  try {
+    const consultation = await ConsultationModel.findByIdAndUpdate(consultationId, {
+      disease,
+      numberOfVisit,
+      nextConsultationDate,
+      attachment,
+      description,
+    });
+
+    await PatientModel.updateOne(
+      { consultation: consultationId },
+      {
+        $set: {
+          "consultation.$.disease": disease,
+          "consultation.$.numberOfVisit": numberOfVisit,
+          "consultation.$.nextConsultationDate": nextConsultationDate,
+          "consultation.$.attachment": attachment,
+          "consultation.$.description": description
+        }
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      msg: "consultation updated successfully",
+      consultation,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      msg: "error updating consultation",
+      error,
+    });
+  }
+};
+
+
+const deleteConsultation = async (req, res) => {
+  const { consultationId } = req.params;
+
+  try {
+    const consultation = await ConsultationModel.findByIdAndDelete(consultationId);
+
+    if (!consultation) {
+      return res.status(404).json({
+        status: "error",
+        msg: "consultation not found",
+      });
     }
-  } catch (error) {
-    res.status(404).send({ status: "error", prescription, error });
-  }
-};
 
-const postPrescription = async (req, res) => {
-  const prescriptionData = req.body;
-  try {
-    const prescriptionAdd = await ConsultationModel.create(prescriptionData);
-    res.status(201).send({
+    const patient = await PatientModel.findByIdAndUpdate(consultation.patientId, {
+      $pull: {
+        consultation: consultation._id,
+      },
+    });
+
+    res.status(200).json({
       status: "success",
-      msg: "prescription added successfully to Database",
-      prescription: prescriptionAdd,
+      msg: "consultation deleted successfully",
+      consultation,
     });
   } catch (error) {
-    res.status(500).send({
+    console.log(error);
+    res.status(500).json({
       status: "error",
-      msg: "error adding prescription to Database",
+      msg: "error deleting consultation",
       error,
     });
   }
 };
 
-const updatePrescription = async (req, res) => {
-  const { mobileNumber } = req.params;
-  const updatedConsultationData = req.body;
-  try {
-    const updatedPrescription = await ConsultationModel.findOneAndUpdate(
-      mobileNumber,
-      updatedConsultationData
-    );
-    res.status(201).send({
-      status: "success",
-      msg: "prescription updated successfully",
-      prescription: updatedPrescription,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .send({ status: "error", msg: "error updating prescription", error });
-  }
-};
-
-const deletePrescription = async (req, res) => {
-  const { mobileNumber } = req.params;
-  try {
-    const deletedPrescription = await ConsultationModel.findOneAndDelete(
-      mobileNumber
-    );
-    res.status(201).send({
-      status: "success",
-      msg: "prescription deleted successfully",
-      prescription: deletedPrescription,
-    });
-  } catch (error) {
-    res.status(500).send({
-      status: "error",
-      msg: "error deleting Prescription from database",
-      error,
-    });
-  }
-};
 
 module.exports = {
   getAllPatients,
@@ -258,8 +364,8 @@ module.exports = {
   addPatient,
   updatePatient,
   deletePatient,
-  getPrescription,
-  postPrescription,
-  updatePrescription,
-  deletePrescription,
+  getConsultation,
+  addConsultation,
+  updateConsultation,
+  deleteConsultation,
 };

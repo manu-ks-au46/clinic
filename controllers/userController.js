@@ -33,6 +33,22 @@ const signUp = async (req, res) => {
   }
 };
 
+// const clinicLogin =async(req,res)=>{
+//   const {email,password} = req.body
+//   try {
+//     const loggedInClinic = await ClinicModel.findOne({email},{email:1,isClinic:1,password:1})
+//     if(!loggedInClinic){
+//       res.status(404).send({status:"error",msg:"clinic not found"})
+//       return
+//     }else{
+
+//     }
+
+//   } catch (error) {
+    
+//   }
+// }
+
 const logIn = async (req, res) => {
   const { email, password } = req.body;
 
@@ -55,7 +71,6 @@ const logIn = async (req, res) => {
       }
     }
 
-    // const userPayload = { email, isDoctor: loggedInUser.isDoctor,id: loggedInUser._id,doctorName: loggedInUser.doctorName};
     const userPayload = {
       email,
       isDoctor: loggedInUser.isDoctor,
