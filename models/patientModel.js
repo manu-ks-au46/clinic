@@ -37,11 +37,14 @@ const patientSchema = new Schema({
   },
   pinCode: {
     type: Number,
-    max: 120,
   },
   createdBy:{
     type: mongoose.Schema.Types.ObjectId,
     ref: "doctors",  
+  },
+  createdBySelf: {
+    type: Boolean,
+    default: false
   },
   doctorname:{
     type:String
