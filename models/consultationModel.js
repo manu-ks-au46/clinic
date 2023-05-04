@@ -7,10 +7,13 @@ const consultationSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "patients",
     },
-    mobileNumber: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "patients",
-    },
+    // patientName:{
+    //   type:String
+    // },
+    // mobileNumber: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "patients",
+    // },
 
     consultationDate: {
       type: Date,

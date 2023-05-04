@@ -33,7 +33,7 @@ doctorRouter.delete("/delete/:id", deletePatient);
 //add,update,delete patient prescription
 doctorRouter.get("/patientinfo", getPatientsWithConsultations);
 doctorRouter.get("/:id", getConsultation);
-doctorRouter.post("/consultation", addConsultation);
+doctorRouter.post("/addconsultation", addConsultation);
 doctorRouter.put("/:id", updateConsultation);
 doctorRouter.delete("/:id", deleteConsultation);
 

@@ -22,9 +22,14 @@ const patientSchema = new Schema({
     type: Number,
     required: true,
   },
+  dateOfBirth: {
+    type: Date,
+    required: true,
+  },
   age: {
     type: Number,
     max: 120,
+    required: true
   },
   gender: {
     type: String,
@@ -37,6 +42,7 @@ const patientSchema = new Schema({
   },
   pinCode: {
     type: Number,
+    required: true
   },
   createdBy:{
     type: mongoose.Schema.Types.ObjectId,

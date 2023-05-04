@@ -321,19 +321,25 @@ const getConsultation = async (req, res) => {
 };
 
 const addConsultation = async (req, res) => {
-  const {
-    patientId,
-    disease,
-    numberOfVisit,
-    nextConsultationDate,
-    attachment,
-    description,
-  } = req.body;
+  const { patientId, disease, numberOfVisit, nextConsultationDate, attachment, description } = req.body;
 
   try {
+    // Validate patient ID
+    if (!patientId) {
+      return res.status(400).json({ status: "error", msg: "Patient ID is required" });
+    }
+    
+    // Find patient by ID
+    const patient = await PatientModel.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ status: "error", msg: "Patient not found" });
+    }
+    
+    // Create consultation
     const consultation = await ConsultationModel.create({
       patientId,
-      mobileNumber: req.body.mobileNumber,
+      mobileNumber: patient.mobileNumber,
+      patientName:patient.patientName,
       disease,
       numberOfVisit,
       nextConsultationDate,
@@ -342,33 +348,38 @@ const addConsultation = async (req, res) => {
       createdBy: req.userPayload.clinic,
       createdByDoctor: req.userPayload.doctor,
       doctorName: req.userPayload.doctorName,
-      clinicName: req.userPayload.clinicName,
-    });
+      clinicName: req.userPayload.clinic.clinicName,
+    })
+    // console.log(createdByDoctor);
+    // console.log(clinicName);
 
-    const patient = await PatientModel.findByIdAndUpdate(patientId, {
+    // Update patient with new consultation
+    const updatedPatient = await PatientModel.findByIdAndUpdate(patientId, {
       $push: {
         consultation: consultation._id,
       },
     });
-
-    res.status(201).json({
+    
+    res.status(201).send({
       status: "success",
-      msg: "consultation added successfully to patient",
+      msg: "Consultation added successfully to patient",
       consultation,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    res.status(500).send({
       status: "error",
-      msg: "error adding consultation to patient",
+      msg: "Error adding consultation to patient",
       error,
     });
   }
 };
 
+
+
 const updateConsultation = async (req, res) => {
+  const consultationId = req.params.id;
   const {
-    consultationId,
     disease,
     numberOfVisit,
     nextConsultationDate,
@@ -377,7 +388,19 @@ const updateConsultation = async (req, res) => {
   } = req.body;
 
   try {
-    const consultation = await ConsultationModel.findByIdAndUpdate(
+    // Validate consultation ID
+    if (!consultationId) {
+      return res.status(400).json({ status: "error", msg: "Consultation ID is required" });
+    }
+
+    // Find consultation by ID
+    const consultation = await ConsultationModel.findById(consultationId);
+    if (!consultation) {
+      return res.status(404).json({ status: "error", msg: "Consultation not found" });
+    }
+
+    // Update consultation
+    await ConsultationModel.findByIdAndUpdate(
       consultationId,
       {
         disease,
@@ -388,6 +411,7 @@ const updateConsultation = async (req, res) => {
       }
     );
 
+    // Update patient with updated consultation
     await PatientModel.updateOne(
       { consultation: consultationId },
       {
@@ -403,18 +427,18 @@ const updateConsultation = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      msg: "consultation updated successfully",
-      consultation,
+      msg: "Consultation updated successfully",
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({
       status: "error",
-      msg: "error updating consultation",
+      msg: "Error updating consultation",
       error,
     });
   }
 };
+
 
 const deleteConsultation = async (req, res) => {
   const { consultationId } = req.params;
