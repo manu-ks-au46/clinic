@@ -17,44 +17,8 @@ cloudinary.config({
 // const client = twilio(accountSid, authToken);
 
 //patients
-const getPatientsWithConsultations = async (req, res) => {
-  try {
-    const doctorId = req.userPayload.id;
-    const patients = await PatientModel.find({ doctor: doctorId })
-      .populate({
-        path: "consultations",
-        select: "-_id -createdAt -updatedAt -__v",
-        populate: {
-          path: "createdBy createdByDoctor",
-          select: "name -_id",
-        },
-      })
-      .select("name email phone consultations")
-      .lean();
 
-    const patientsWithCount = await Promise.all(
-      patients.map(async (patient) => {
-        const count = await ConsultationModel.countDocuments({
-          patientId: patient._id,
-        });
-        return { ...patient, consultationCount: count };
-      })
-    );
 
-    res.status(200).json({
-      status: "success",
-      msg: "All patients with consultations",
-      patients: patientsWithCount,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      status: "error",
-      msg: "Error getting All patients with consultations",
-      error,
-    });
-  }
-};
 const getAllPatients = async (req, res) => {
   try {
     const patients = await PatientModel.find()
@@ -79,15 +43,16 @@ const getPatientsByPhone = async (req, res) => {
       res.status(404).send({ status: "error", msg: "patient not found" });
     }
   } catch (error) {
-    res.status(404).send({ status: "error", patient, error });
+    res.status(404).send({ status: "error", error });
   }
 };
 const getPatientsByClinic = async (req, res) => {
-  const { mobileNumber } = req.params;
+  const { clinicId } = req.params;
 
   try {
-    const patient = await PatientModel.findOne({ mobileNumber: mobileNumber })
-      .populate("createdBy", "clinicName location", "ddoctorName")
+    const patient = await PatientModel.findOne({ createdBy: clinicId })
+      .populate("createdBy", "clinicName location")
+      .populate("createdByDoctor", "doctorName")
       .exec();
     if (patient) {
       res.status(200).send({ status: "success", patient });
@@ -95,9 +60,33 @@ const getPatientsByClinic = async (req, res) => {
       res.status(404).send({ status: "error", msg: "patient not found" });
     }
   } catch (error) {
-    res.status(404).send({ status: "error", patient, error });
+    res.status(404).send({ status: "error", error });
   }
 };
+
+const getPatientsByDoctor = async (req, res) => {
+  const doctorId = req.userPayload.id;
+  console.log(doctorId);
+  try {
+    const patients = await PatientModel.find({ createdBy: doctorId })
+      .populate("createdBy", "clinic")
+      .exec();
+    if (patients.length === 0) {
+      return res.status(404).send({ status: "error", msg: "No patients found" });
+    }
+    res.status(200).send({ status: "success", patients });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ status: "error", msg: "Something went wrong" });
+  }
+};
+
+
+ 
+
+
+
+
 
 //appointment
 // const appointmentStatus = async(req,res)=>{
@@ -243,6 +232,60 @@ const updatePatient = async (req, res) => {
 };
 //delete
 
+// const deletePatient = async (req, res) => {
+//   const patientId = req.params.id;
+
+//   try {
+//     const patient = await PatientModel.findById(patientId);
+//     if (!patient) {
+//       res.status(404).send({
+//         status: "error",
+//         msg: "patient not found",
+//       });
+//       return;
+//     }
+//     const doctor = await DoctorModel.findById(patient.createdBy);
+//     if (!doctor) {
+//       res.status(404).send({
+//         status: "error",
+//         msg: "doctor not found",
+//       });
+//       return;
+//     }
+//     const clinic = await ClinicModel.findById(patient.clinic);
+//     if (!clinic) {
+//       res.status(404).send({
+//         status: "error",
+//         msg: "clinic not found",
+//       });
+//       return;
+//     }
+//     // Delete consultations associated with the patient
+//     await ConsultationModel.deleteMany({ patient:patientId });
+//     await doctor.updateOne({
+//       $pull: {
+//         patients: patientId,
+//       },
+//     });
+//     await clinic.updateOne({
+//       $pull: {
+//         patients: patientId,
+//       },
+//     });
+//     await PatientModel.findByIdAndDelete(patientId);
+//     res.status(200).send({
+//       status: "success",
+//       msg: "patient deleted successfully",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       status: "error",
+//       msg: "error deleting patient",
+//       error,
+//     });
+//   }
+// };
 const deletePatient = async (req, res) => {
   const patientId = req.params.id;
 
@@ -271,16 +314,25 @@ const deletePatient = async (req, res) => {
       });
       return;
     }
+    
+    // delete related consultation documents
+    await ConsultationModel.deleteMany({ patientId: patientId });
+
+    // remove patient from doctor's patients array
     await doctor.updateOne({
       $pull: {
         patients: patientId,
       },
     });
+
+    // remove patient from clinic's patients array
     await clinic.updateOne({
       $pull: {
         patients: patientId,
       },
     });
+
+    // delete patient document
     await PatientModel.findByIdAndDelete(patientId);
     res.status(200).send({
       status: "success",
@@ -483,7 +535,7 @@ module.exports = {
   getAllPatients,
   getPatientsByPhone,
   getPatientsByClinic,
-  getPatientsWithConsultations,
+  getPatientsByDoctor,
   // appointmentStatus,
   addPatient,
   updatePatient,

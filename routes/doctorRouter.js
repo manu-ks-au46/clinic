@@ -2,12 +2,11 @@ const { Router } = require("express");
 const {
   getAllPatients,
   getPatientsByPhone,
-  getPatientsWithConsultations,
   addPatient,
   deletePatient,
   updatePatient,
   getConsultation,
-  appointmentStatus,
+  getPatientsByDoctor,
   addConsultation,
   updateConsultation,
   deleteConsultation
@@ -31,7 +30,7 @@ doctorRouter.post("/addpatient", addPatient);
 doctorRouter.put("/:patientId", updatePatient);
 doctorRouter.delete("/delete/:id", deletePatient);
 //add,update,delete patient prescription
-doctorRouter.get("/patientinfo", getPatientsWithConsultations);
+doctorRouter.get("/patientinfo", getPatientsByDoctor);
 doctorRouter.get("/:id", getConsultation);
 doctorRouter.post("/addconsultation", addConsultation);
 doctorRouter.put("/:id", updateConsultation);

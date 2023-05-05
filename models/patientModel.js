@@ -18,13 +18,23 @@ const patientSchema = new Schema({
   email: {
     type: String,
   },
+  // mobileNumber: {
+  //   type: Number,
+  //   required: true,
+  // },
   mobileNumber: {
     type: Number,
     required: true,
+    validate: {
+      validator: function (v) {
+        return /^\d{10}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid mobile number! Please input a 10-digit number.`
+    }
   },
   dateOfBirth: {
     type: Date,
-    required: true,
+    // required: true,
   },
   age: {
     type: Number,
