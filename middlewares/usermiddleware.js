@@ -3,7 +3,9 @@ const { SECRET_KEY } = require('../controllers/userController')
 
 const verifyToken = (req, res, next) => {
   //1)Get token from Cookie by cookie-parser
-  const token = req.cookies.jwt
+  // const token = req.cookies.jwt
+  const token = req.headers.authorization
+  console.log(token);
 
   //2) Validate the token
   if (token) {
