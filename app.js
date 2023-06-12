@@ -2,7 +2,7 @@ const express = require("express")
 const dotenv = require("dotenv")
 const cookieParser = require("cookie-parser")
 const cors = require('cors')
-// const helmet = require('helmet'); 
+const helmet = require('helmet'); 
 
 const userRouter = require('./routes/userRouter')
 const patientRouter = require('./routes/patientRouter')
@@ -14,13 +14,11 @@ dotenv.config()
 const app = express()
 
 //middlewares
-app.use(cors({
-    allowedHeaders:'Authorization,Content-Type'
-}));
+app.use(cors());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())//cookie
-// app.use(helmet());
+app.use(helmet());
 
 //routes
 app.use('/superadmin',superAdminRouter)
