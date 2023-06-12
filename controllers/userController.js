@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const DoctorModel = require("../models/doctormodel");
 const ClinicModel = require("../models/clinicModel");
 const SECRET_KEY = process.env.SECRET_KEY;
+
+
 const signUp = async (req, res) => {
   const userData = req.body;
   const { password } = req.body;
@@ -85,7 +87,7 @@ const logIn = async (req, res) => {
       expiresIn: "1d",
     });
     res.cookie("jwt", token);
-    res.send({ status: "success", msg: "User Logged in Successfully" });
+    res.send({ status: "success", msg: "User Logged in Successfully" },token);
   } catch (error) {
     res
       .status(500)

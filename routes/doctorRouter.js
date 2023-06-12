@@ -5,8 +5,9 @@ const {
   addPatient,
   deletePatient,
   updatePatient,
-  getConsultation,
+  getConsultationById,
   getPatientsByDoctor,
+  updateAppointmentStatus,
   addConsultation,
   updateConsultation,
   deleteConsultation
@@ -31,7 +32,8 @@ doctorRouter.put("/:patientId", updatePatient);
 doctorRouter.delete("/delete/:id", deletePatient);
 //add,update,delete patient prescription
 doctorRouter.get("/patientinfo", getPatientsByDoctor);
-doctorRouter.get("/:id", getConsultation);
+doctorRouter.get("/consultation/:id", getConsultationById);
+doctorRouter.post("/appointmentstatus", updateAppointmentStatus);
 doctorRouter.post("/addconsultation", addConsultation);
 doctorRouter.put("/:id", updateConsultation);
 doctorRouter.delete("/:id", deleteConsultation);

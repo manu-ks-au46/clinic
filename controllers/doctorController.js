@@ -232,60 +232,6 @@ const updatePatient = async (req, res) => {
 };
 //delete
 
-// const deletePatient = async (req, res) => {
-//   const patientId = req.params.id;
-
-//   try {
-//     const patient = await PatientModel.findById(patientId);
-//     if (!patient) {
-//       res.status(404).send({
-//         status: "error",
-//         msg: "patient not found",
-//       });
-//       return;
-//     }
-//     const doctor = await DoctorModel.findById(patient.createdBy);
-//     if (!doctor) {
-//       res.status(404).send({
-//         status: "error",
-//         msg: "doctor not found",
-//       });
-//       return;
-//     }
-//     const clinic = await ClinicModel.findById(patient.clinic);
-//     if (!clinic) {
-//       res.status(404).send({
-//         status: "error",
-//         msg: "clinic not found",
-//       });
-//       return;
-//     }
-//     // Delete consultations associated with the patient
-//     await ConsultationModel.deleteMany({ patient:patientId });
-//     await doctor.updateOne({
-//       $pull: {
-//         patients: patientId,
-//       },
-//     });
-//     await clinic.updateOne({
-//       $pull: {
-//         patients: patientId,
-//       },
-//     });
-//     await PatientModel.findByIdAndDelete(patientId);
-//     res.status(200).send({
-//       status: "success",
-//       msg: "patient deleted successfully",
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       status: "error",
-//       msg: "error deleting patient",
-//       error,
-//     });
-//   }
-// };
 const deletePatient = async (req, res) => {
   const patientId = req.params.id;
 
@@ -349,28 +295,69 @@ const deletePatient = async (req, res) => {
 };
 
 //consultation
-const getConsultation = async (req, res) => {
-  const { consultationId } = req.params;
-
+const getConsultationById = async (req, res) => {
+  const consultationId = req.params.id;
+ 
   try {
-    const getConsultation = await ConsultationModel.findById(consultationId)
-      .populate("createdBy", "name _id")
-      .populate("createdByDoctor", "name _id");
+    const consultation = await ConsultationModel.findById(consultationId)
+    .populate()
+    if (!consultation) {
+      return res.status(404).json({ status: "error", msg: "Consultation not found" });
+    }
 
     res.status(200).json({
       status: "success",
-      msg: "consultation retrieved successfully",
-      getConsultation,
+      msg: "Consultation retrieved successfully",
+      consultation,
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({
       status: "error",
-      msg: "error retrieving consultation",
+      msg: "Error retrieving consultation",
       error,
     });
   }
 };
+
+//appointment status
+
+const updateAppointmentStatus = async (req, res) => {
+  const { appointmentId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const appointment = await AppointmentModel.findByIdAndUpdate(
+      appointmentId,
+      { status },
+      { new: true }
+    ).populate("doctorId", "name");
+
+    if (!appointment) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Appointment not found",
+      });
+    }
+
+    // Send notification to the patient here
+    // ...
+
+    res.status(200).json({
+      status: "success",
+      msg: "Appointment status updated successfully",
+      appointment,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      msg: "Error updating appointment status",
+      error,
+    });
+  }
+};
+
 
 const addConsultation = async (req, res) => {
   const { patientId, disease, numberOfVisit, nextConsultationDate, attachment, description } = req.body;
@@ -540,7 +527,8 @@ module.exports = {
   addPatient,
   updatePatient,
   deletePatient,
-  getConsultation,
+  updateAppointmentStatus,
+  getConsultationById,
   addConsultation,
   updateConsultation,
   deleteConsultation,
