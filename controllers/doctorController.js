@@ -22,8 +22,8 @@ cloudinary.config({
 const getAllPatients = async (req, res) => {
   try {
     const patients = await PatientModel.find()
-      // .populate("createdBy", "clinic")
-      // .exec();
+      .populate("createdBy", "clinic")
+      .exec();
     res.status(200).send({ status: "success", patients });
   } catch (error) {
     res.status(404).send({ status: "error", error });
@@ -65,8 +65,8 @@ const getPatientsByClinic = async (req, res) => {
 };
 
 const getPatientsByDoctor = async (req, res) => {
-  const doctorId = req.userPayload.id;
-  console.log(doctorId);
+  const doctorId = req.headers.userPayload.id;
+  // console.log(doctorId);
   try {
     const patients = await PatientModel.find({ createdBy: doctorId })
       .populate("createdBy", "clinic")
