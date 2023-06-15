@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
   if (token) {
     try {
       const userPayload = jwt.verify(token,process.env.SECRET_KEY)
-      req.userPayload = userPayload
+      req.headers.userPayload = userPayload
       next()
     } catch (error) {
       res.status(400).send({ status: 'error', msg: 'Token Invalid' })
