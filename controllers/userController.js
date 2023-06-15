@@ -87,7 +87,7 @@ const logIn = async (req, res) => {
       expiresIn: "1d",
     });
     res.cookie("jwt", token);
-    res.send({ status: "success", msg: "User Logged in Successfully" ,token});
+    res.send({ status: "success", msg: "User Logged in Successfully" ,token,userPayload});
   } catch (error) {
     res
       .status(500)
