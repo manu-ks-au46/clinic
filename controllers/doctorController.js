@@ -65,7 +65,7 @@ const getPatientsByClinic = async (req, res) => {
 };
 
 const getPatientsByDoctor = async (req, res) => {
-  const doctorId = req.headers.userPayload.id;
+  const doctorId = req.headers.userPayload._id;
   // console.log(doctorId);
   try {
     const patients = await PatientModel.find({ createdBy: doctorId })
