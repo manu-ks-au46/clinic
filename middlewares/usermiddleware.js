@@ -24,8 +24,8 @@ const verifyToken = (req, res, next) => {
   const isDoctor = (req, res, next) => {
     //if doctor, next()
     //else not authorized to perform this operation
-    // const userPayload = req.userPayload
-    const userPayload = req.headers.authorization
+    const userPayload = req.headers.userPayload
+    // const userPayload = req.headers.authorization
   
     if (userPayload.isDoctor) {
       next()
